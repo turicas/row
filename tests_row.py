@@ -1,7 +1,5 @@
 # coding: utf-8
 
-import os
-import tempfile
 import unittest
 
 from textwrap import dedent
@@ -79,23 +77,15 @@ class TestTab(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_parse_file(self):
-        temporary = tempfile.NamedTemporaryFile(delete=False)
-        contents = dedent('''
-        a\tb\tc\td\te
-        123\t456\t789\t0\t-1
-        -1\t0\t789\t456\t123
-        ''').strip() + '\n'
-        temporary.write(contents)
-        temporary.close()
-        expected = [
-            {'a': '123', 'b': '456', 'c': '789', 'd': '0',   'e': '-1'},
-            {'a': '-1',  'b': '0',   'c': '789', 'd': '456', 'e': '123'},
-        ]
-        result = parse_file(temporary.name)
-        os.unlink(temporary.name)
-        self.assertEqual(result, expected)
+        cities = parse_file('brazilian-cities.row')
+        self.assertEqual(len(cities), 5565)
 
-        types = set([type(key) for row in result for key in row.keys()]).union(
-                set([type(value) for row in result for value in row.values()]))
+        cities_rio = [city for city in cities if city['state'] == u'RJ']
+        self.assertEqual(len(cities_rio), 92)
+
+        types_keys = set([type(key) for city in cities for key in city.keys()])
+        types_values = set([type(value) for city in cities
+                                        for value in city.values()])
         expected_types = set([unicode])
-        self.assertEqual(types, expected_types)
+        self.assertEqual(types_keys, expected_types)
+        self.assertEqual(types_values, expected_types)
