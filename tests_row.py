@@ -94,3 +94,8 @@ class TestTab(unittest.TestCase):
         result = parse_file(temporary.name)
         os.unlink(temporary.name)
         self.assertEqual(result, expected)
+
+        types = set([type(key) for row in result for key in row.keys()]).union(
+                set([type(value) for row in result for value in row.values()]))
+        expected_types = set([unicode])
+        self.assertEqual(types, expected_types)

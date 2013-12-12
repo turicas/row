@@ -19,4 +19,4 @@ def parse(text):
 
 def parse_file(filename):
     with open(filename) as fobj:
-        return parse(fobj.read())
+        return parse(fobj.read().decode('utf-8'))
