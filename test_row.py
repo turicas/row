@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import datetime
 import unittest
 
 from textwrap import dedent
@@ -117,5 +118,36 @@ class TestTab(unittest.TestCase):
         self.assertEqual(types_area, set([float]))
 
 
-    # TODO: test type converters with NULL etc.
-    # TODO: test utf8
+    def test_type_converters(self):
+        contents = dedent(u'''
+        b\ti\tf\td\tdt\ts
+        bool\tint\tfloat\tdate\tdatetime\tstring
+
+        \\N\t\\N\t\\N\t\\N\t\\N
+        true\t42\t6.28\t2014-04-29\t1987-04-29T03:02:00-03:00\tÁlvaro's bday
+        false\t42\t6.28\t2014-04-29\t1987-04-29T03:02:00-03:00\tÁlvaro's bday
+        ''').strip()
+        field_names = ('b', 'i', 'f', 'd', 'dt', 's')
+
+        class UTC_less_3(datetime.tzinfo):
+            def utcoffset(self, dt):
+                return datetime.timedelta(hours=-3)
+            def tzname(self, dt):
+                return '-03:00'
+
+        sample_date = datetime.date(2014, 4, 29)
+        sample_datetime = datetime.datetime(1987, 4, 29, 3, 2, 0,
+                tzinfo=UTC_less_3())
+
+        rows = parse(contents)
+        self.assertEqual(len(rows), 3)
+
+        none_row = [None, None, None, None, None]
+        self.assertEqual(rows[0], dict(zip(field_names, none_row)))
+
+        expected_row = [True, 42, 6.28, sample_date, sample_datetime,
+                u"Álvaro's bday"]
+        self.assertEqual(rows[1], dict(zip(field_names, expected_row)))
+
+        expected_row[0] = False
+        self.assertEqual(rows[2], dict(zip(field_names, expected_row)))

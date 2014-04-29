@@ -6,16 +6,30 @@ import iso8601
 
 
 def _convert_date(date_str):
+    if date_str is None:
+        return None
     return datetime.date(*[int(x) for x in date_str.split('-')])
 
 
+def _convert_bool(bool_str):
+    if bool_str is None:
+        return None
+    return bool_str.lower() == 'true'
+
+
+def _convert_datetime(datetime_str):
+    if datetime_str is None:
+        return None
+    return iso8601.parse_date(datetime_str)
+
+
 TYPE_CONVERTERS = {
-        'bool': bool,
-        'int': int,
-        'float': float,
+        'bool': _convert_bool,
+        'int': lambda value: int(value) if value is not None else None,
+        'float': lambda value: float(value) if value is not None else None,
         'date': _convert_date,
-        'datetime': iso8601.parse_date,
-        'string': lambda value: value,}
+        'datetime': _convert_datetime,
+        'string': lambda value: value if value is not None else None,}
 
 
 def _filter_escape_sequences(value):
