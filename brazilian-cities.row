@@ -1,6 +1,8 @@
 # This file contains data about brazilian cities, got from IBGE website (2010)
 # "area" is in km²
+
 state	city	inhabitants	area
+string	string	int	float
 AC	Acrelândia	12538	1807.92
 AC	Assis Brasil	6072	4974.18
 AC	Brasiléia	21398	3916.5
