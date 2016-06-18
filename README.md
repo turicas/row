@@ -44,23 +44,29 @@ have stronger rules, lowering ambiguation and complexity of processing (see
 
 ## Example of Usage
 
+The interface looks like Python's `csv` module: has `DictReader` and
+`DictWriter` classes.
+
 Giving the file `brazilian-cities.row`, we can read it like this:
 
-    # coding: utf-8
+```python
+# coding: utf-8
 
-    import row
+import row
 
+cities = row.DictReader(open('brazilian-cities.row', 'rb'))
+for city in cities:
+    if city['state'] != 'RJ':
+        continue
+    area = city['area']
+    inhabitants = city['inhabitants']
+    density = inhabitants / area
+    print('{}:'.format(city['city']))
+    print('  area        = {:8.2f} km²'.format(area))
+    print('  inhabitants = {:8d} citizens'.format(inhabitants))
+    print('  density     = {:8.2f} citizens/km²'.format(density))
+```
 
-    cities = row.parse_file('brazilian-cities.row')
-    cities_rio = [city for city in cities if city['state'] == u'RJ']
-    for city_data in cities_rio:
-        area = float(city_data['area'])
-        inhabitants = int(city_data['inhabitants'])
-        density = inhabitants / area
-        print(u'{}:'.format(city_data['city']))
-        print(u'  area        = {:8.2f} km²'.format(area))
-        print(u'  inhabitants = {:8d} citizens'.format(inhabitants))
-        print(u'  density     = {:8.2f} citizens/km²'.format(density))
 
 
 ## TODO
