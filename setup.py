@@ -32,7 +32,7 @@ See a quick start tutorial at:
 setup(name='row',
       description='A brand-new tabular format',
       long_description=LONG_DESCRIPTION,
-      version='0.1.0dev3',
+      version='0.1.0dev4',
       author=u'Álvaro Justen',
       author_email='alvarojusten@gmail.com',
       url='https://github.com/turicas/row/',

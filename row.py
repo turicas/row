@@ -88,10 +88,11 @@ def _validate_types(field_types):
 
 def _fix_value(value):
     if value is None:
-        return '\\N'
+        value = '\\N'
     else:
-        return value.replace('\t', '\\t').replace('\n', '\\n')\
-                    .replace('#', '\\#').replace('\\', '\\\\')
+        value = value.replace('\t', '\\t').replace('\n', '\\n')\
+                     .replace('#', '\\#').replace('\\', '\\\\')
+    return value.encode('utf-8')
 
 def _create_line(values):
     return '\t'.join(_fix_value(value) for value in values) + '\n'
@@ -128,13 +129,11 @@ def parse_file(filename):
 class Reader(object):
 
     def __init__(self, fobj):
-        self._gzip = False
         self._fobj = fobj
         data = self._fobj.read(2)
         self._fobj.seek(self._fobj.tell() - 2)
         if data == b'\x1f\x8b':  # gzip
             self._fobj = gzip.open(fobj)
-            self._gzip = True
 
         self._fieldnames = self._take_next()
         self._fieldtypes = self._take_next()
@@ -156,8 +155,7 @@ class Reader(object):
     def _take_next(self):
         data = None
         for line in self._fobj:
-            if self._gzip:
-                line = line.decode('utf-8')
+            line = line.decode('utf-8')
             lstrip = line.strip()
             if lstrip and not lstrip.startswith('#'):
                 return [_filter_escape_sequences(value)

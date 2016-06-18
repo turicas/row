@@ -1,5 +1,4 @@
-row
-===
+# row
 
 It's a reference implementation of the new tabular file standard [discussed at
 dataprotocols
@@ -10,8 +9,7 @@ have stronger rules, lowering ambiguation and complexity of processing (see
 "Specification" below).
 
 
-Specification
--------------
+## Specification
 
 - The first line must be the header;
 - Rows must be separated by character `0x0A` (new line, often represented as
@@ -31,8 +29,7 @@ Specification
   - `\\` for back slash (`0x5C`).
 
 
-Example of Usage
-----------------
+## Example of Usage
 
 Giving the file `brazilian-cities.row`, we can read it like this:
 
@@ -53,9 +50,22 @@ Giving the file `brazilian-cities.row`, we can read it like this:
         print(u'  density     = {:8.2f} citizens/km²'.format(density))
 
 
+## TODO
 
-Tests
------
+### Specification
+
+- Support for variable (unknown) metadata
+- Support for format versioning metadata
+- May add optional RDF metadata
+- Add 'binary' type (base64-encoded)
+
+
+### Python Library
+
+- Python3 support
+
+
+## Tests
 
 First be sure you installed all dependencies:
 
