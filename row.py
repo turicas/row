@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import datetime
+import gzip
 
 from base64 import b64decode, b64encode
 from collections import OrderedDict
@@ -127,7 +128,14 @@ def parse_file(filename):
 class Reader:
 
     def __init__(self, fobj):
+        self._gzip = False
         self._fobj = fobj
+        data = self._fobj.read(2)
+        self._fobj.seek(self._fobj.tell() - 2)
+        if data == b'\x1f\x8b':  # gzip
+            self._fobj = gzip.open(fobj)
+            self._gzip = True
+
         self._fieldnames = self._take_next()
         self._fieldtypes = self._take_next()
         self._fields = OrderedDict([name_type
@@ -148,6 +156,8 @@ class Reader:
     def _take_next(self):
         data = None
         for line in self._fobj:
+            if self._gzip:
+                line = line.decode('utf-8')
             lstrip = line.strip()
             if lstrip and not lstrip.startswith('#'):
                 return [_filter_escape_sequences(value)
@@ -158,8 +168,8 @@ class Reader:
         return self
 
     def __next__(self):
-        return self._take_next()
-        #return _convert_types(self._take_next(), self._fieldtypes)
+        return _convert_types(self._take_next(), self._fieldtypes)
+
 
 class DictReader(Reader):
 
