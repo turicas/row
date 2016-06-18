@@ -2,7 +2,8 @@
 # "area" is in km²
 
 state	city	inhabitants	area
-string	string	int	float
+text	text	int	float
+# acre
 AC	Acrelândia	12538	1807.92
 AC	Assis Brasil	6072	4974.18
 AC	Brasiléia	21398	3916.5
@@ -25,6 +26,8 @@ AC	Sena Madureira	38029	23751.47
 AC	Senador Guiomard	20179	2321.45
 AC	Tarauacá	35590	20171.05
 AC	Xapuri	16091	5347.45
+
+# alagoas
 AL	Água Branca	19377	454.63
 AL	Anadia	17424	189.47
 AL	Arapiraca	214006	356.18

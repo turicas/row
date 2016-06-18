@@ -170,6 +170,8 @@ class Reader(object):
     def __next__(self):
         return _convert_types(self._take_next(), self._fieldtypes)
 
+    next = __next__
+
 
 class DictReader(Reader):
 
