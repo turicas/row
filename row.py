@@ -2,6 +2,9 @@
 
 import datetime
 
+from base64 import b64decode, b64encode
+from collections import OrderedDict
+
 import iso8601
 
 
@@ -29,7 +32,46 @@ TYPE_CONVERTERS = {
         'float': lambda value: float(value) if value is not None else None,
         'date': _convert_date,
         'datetime': _convert_datetime,
-        'string': lambda value: value if value is not None else None,}
+        'text': lambda value: value if value is not None else None,
+        'binary': lambda value: b64decode(value) if value is not None else None, }
+
+def _bool_serializer(value):
+    if value is True:
+        return 'true'
+    elif value is False:
+        return 'false'
+    else:
+        return None
+
+def _number_serializer(value):
+    if value is not None:
+        return str(value)
+    else:
+        return None
+
+def _time_serializer(value):
+    if value is not None:
+        return value.isoformat()
+    else:
+        return None
+
+def _text_serializer(value):
+    return value
+
+def _binary_serializer(value):
+    if value is not None:
+        return b64encode(value)
+    else:
+        return None
+
+TYPE_SERIALIZER = {
+        'bool': _bool_serializer,
+        'int': _number_serializer,
+        'float': _number_serializer,
+        'date': _time_serializer,
+        'datetime': _time_serializer,
+        'text': _text_serializer,
+        'binary': _binary_serializer, }
 
 
 def _filter_escape_sequences(value):
@@ -41,6 +83,22 @@ def _filter_escape_sequences(value):
 
 def _validate_types(field_types):
     return all([field_type in TYPE_CONVERTERS for field_type in field_types])
+
+
+def _fix_value(value):
+    if value is None:
+        return '\\N'
+    else:
+        return value.replace('\t', '\\t').replace('\n', '\\n')\
+                    .replace('#', '\\#').replace('\\', '\\\\')
+
+def _create_line(values):
+    return '\t'.join(_fix_value(value) for value in values) + '\n'
+
+
+def _create_row(values, fieldtypes):
+    return _create_line(TYPE_SERIALIZER[fieldtype](value)
+                        for fieldtype, value in zip(fieldtypes, values))
 
 
 def _convert_types(values, types):
@@ -64,3 +122,94 @@ def parse(text):
 def parse_file(filename):
     with open(filename) as fobj:
         return parse(fobj.read().decode('utf-8'))
+
+
+class Reader:
+
+    def __init__(self, fobj):
+        self._fobj = fobj
+        self._fieldnames = self._take_next()
+        self._fieldtypes = self._take_next()
+        self._fields = OrderedDict([name_type
+            for name_type in zip(self._fieldnames, self._fieldtypes)])
+
+    @property
+    def fieldnames(self):
+        return self._fieldnames
+
+    @property
+    def fieldtypes(self):
+        return self._fieldtypes
+
+    @property
+    def fields(self):
+        return self._fields
+
+    def _take_next(self):
+        data = None
+        for line in self._fobj:
+            lstrip = line.strip()
+            if lstrip and not lstrip.startswith('#'):
+                return [_filter_escape_sequences(value)
+                        for value in line[:-1].split('\t')]
+        raise StopIteration()
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return self._take_next()
+        #return _convert_types(self._take_next(), self._fieldtypes)
+
+class DictReader(Reader):
+
+    def __next__(self):
+        return dict(zip(self._fieldnames,
+                        _convert_types(self._take_next(), self._fieldtypes)))
+
+
+class Writer:
+
+    def __init__(self, fobj, fieldnames, fieldtypes):
+        self._fobj = fobj
+        self._fieldnames = fieldnames
+        self._fieldtypes = fieldtypes
+        self._fields = OrderedDict([name_type
+            for name_type in zip(fieldnames, fieldtypes)])
+        self._fieldcount = len(fieldnames)
+        if self._fieldcount != len(fieldtypes):
+            raise ValueError('Field names and types should have same length')
+
+        fobj.write(_create_line(fieldnames))
+        fobj.write(_create_line(fieldtypes))
+
+    @property
+    def fieldnames(self):
+        return self._fieldnames
+
+    @property
+    def fieldtypes(self):
+        return self._fieldtypes
+
+    @property
+    def fields(self):
+        return self._fields
+
+    def writerow(self, data):
+        if len(data) != self._fieldcount:
+            raise ValueError('Wrong number of field values')
+
+        self._fobj.write(_create_row(data, self._fieldtypes))
+
+    def close(self):
+        self._fobj.close()
+
+
+class DictWriter(Writer):
+
+    def writerow(self, data):
+        if len(data) != self._fieldcount:
+            raise ValueError('Wrong number of field values')
+
+        data_values = [data[fieldname] for fieldname in self._fieldnames]
+        self._fobj.write(_create_row(data_values, self._fieldtypes))
