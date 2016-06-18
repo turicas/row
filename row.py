@@ -125,7 +125,7 @@ def parse_file(filename):
         return parse(fobj.read().decode('utf-8'))
 
 
-class Reader:
+class Reader(object):
 
     def __init__(self, fobj):
         self._gzip = False
@@ -178,7 +178,7 @@ class DictReader(Reader):
                         _convert_types(self._take_next(), self._fieldtypes)))
 
 
-class Writer:
+class Writer(object):
 
     def __init__(self, fobj, fieldnames, fieldtypes):
         self._fobj = fobj
